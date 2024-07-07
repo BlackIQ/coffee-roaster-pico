@@ -2,9 +2,9 @@ from machine import Pin, PWM
 from time import sleep
 
 # Define pins for each LED
-RED_PIN = 2
-GREEN_PIN = 3
-BLUE_PIN = 4
+RED_PIN = 19
+GREEN_PIN = 18
+BLUE_PIN = 20
 
 # Initialize PWM for each LED
 red_pwm = PWM(Pin(RED_PIN))
@@ -13,6 +13,8 @@ blue_pwm = PWM(Pin(BLUE_PIN))
 
 # Set PWM frequency
 pwm_freq = 1000
+
+# Set LEDs frequency
 red_pwm.freq(pwm_freq)
 green_pwm.freq(pwm_freq)
 blue_pwm.freq(pwm_freq)

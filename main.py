@@ -2,7 +2,7 @@ from machine import Pin, UART
 from time import sleep
 import json
 
-from max6675 import MAX6675
+# from max6675 import MAX6675
 
 # ----- Pin setup -----
 
@@ -17,18 +17,19 @@ relay_7_pin = 27
 relay_8_pin = 26
 
 # Thermocouple
-thermo_clk_pin = 14
-thermo_cs_pin = 15
-thermo_so_pin = 16
+# thermo_clk_pin = 14
+# thermo_cs_pin = 15
+# thermo_so_pin = 16
 
 # Bluetooth
 scl_pin = Pin(1, Pin.OUT)
 sda_pin = Pin(2, Pin.IN)
 
 # LED
+white_pin = 21
 green_pin = 18
-red_pin = 19
 blue_pin = 20
+red_pin = 19
 
 # ----- Pin mode -----
 
@@ -43,40 +44,44 @@ relay_7 = Pin(relay_7_pin, Pin.OUT)
 relay_8 = Pin(relay_8_pin, Pin.OUT)
 
 # Thermocouple
-thermo_sck = Pin(thermo_clk_pin, Pin.OUT)
-thermo_cs = Pin(thermo_cs_pin, Pin.OUT)
-thermo_so = Pin(thermo_so_pin, Pin.IN)
+# thermo_sck = Pin(thermo_clk_pin, Pin.OUT)
+# thermo_cs = Pin(thermo_cs_pin, Pin.OUT)
+# thermo_so = Pin(thermo_so_pin, Pin.IN)
 
 # LED
+white = Pin(white_pin, Pin.OUT)
 green = Pin(green_pin, Pin.OUT)
-red = Pin(red_pin, Pin.OUT)
 blue = Pin(blue_pin, Pin.OUT)
+red = Pin(red_pin, Pin.OUT)
 
 # ----- Setup modules -----
 
 # Thermocouple
-thermocouple = MAX6675(thermo_sck, thermo_cs , thermo_so)
+# thermocouple = MAX6675(thermo_sck, thermo_cs , thermo_so)
 
 # Bluetooth
 uart = UART(0, 9600)
 
 # ----- Functions -----
 
-def blink(pin):
+def blink(pin, timeout):
     pin.value(1)
-    sleep(0.5)
+    sleep(timeout)
     pin.value(0)
     
 relays = [relay_1, relay_2, relay_3, relay_4, relay_5, relay_6, relay_7, relay_8]
 
 for relay in relays:
     relay.value(1)
+    
+default_outs = ["OK+LOST", "OK+CONN"]
 
 while True:
     # temp = thermocouple.read()
 
     if uart.any():
-        blink(green)
+        blink(green, 0.1)
+        sleep(0.2)
         
         data_string = uart.read()
         data_string_utf8 = data_string.decode('utf-8')
@@ -86,7 +91,7 @@ while True:
         try:
             data = json.loads(data_string_utf8)
             
-            blink(blue)
+            blink(blue, 0.5)
 
             time1 = data.get("1", 0)
             time2 = data.get("2", 0)
@@ -96,7 +101,9 @@ while True:
 
             print(time1, time2, time3, time4, time5)
                
-            print("Step 1")      
+            # Step 1
+            
+            blink(blue, 0.5)
 
             relay_1.value(0) # 1 -> On
             relay_5.value(0) # 5 -> On
@@ -104,21 +111,27 @@ while True:
             
             sleep(time1)
             
-            print("Step 2")
+            # Step 2
+            
+            blink(blue, 0.5)
 
             relay_2.value(0) # 2 -> On
             relay_1.value(1) # 1 -> Off
 
             sleep(time2)
             
-            print("Step 3")
+            # Step 3
+            
+            blink(blue, 0.5)
 
             relay_3.value(0) # 3 -> On
             relay_2.value(1) # 2 -> Off
 
             sleep(time3)
             
-            print("Step 4")
+            # Step 4
+            
+            blink(blue, 0.5)
 
             relay_4.value(0) # 4 -> On
             relay_3.value(1) # 3 -> Off
@@ -126,13 +139,21 @@ while True:
 
             sleep(time4)
             
-            print("Step 5")
+            # Step 5
+            
+            blink(blue, 0.5)
 
             relay_4.value(1) # 4 -> Off
             relay_6.value(1) # 6 -> Off
 
             sleep(time5)
+            
+            # Done
+            
+            blink(blue, 2)
         except Exception as e:
-            blink(red)
-
-            print("Error:", e)
+            if data_string_utf8 in default_outs:
+                blink(white, 1)
+            else:
+                blink(red, 1)
+                print("Error:", e)
